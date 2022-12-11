@@ -8,7 +8,7 @@ fi
 while getopts "h:p" OPTION;
 do
     case "${OPTION}" in
-    h) 
+    h)  
        dnsname="$OPTARG" 
        ;;
     p) 
