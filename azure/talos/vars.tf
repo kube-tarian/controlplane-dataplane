@@ -39,4 +39,5 @@ variable "traefikhttpsport" {
 
 variable "configfolderpath" {
     description = "CLI config folder path"
+    default= "/../../../../../intelops/capten/capten/config"
 }

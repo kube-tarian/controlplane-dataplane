@@ -489,13 +489,15 @@ resource "azurerm_virtual_machine" "talosworker" {
   
 }
 
+
 resource "null_resource" "bootstrap_etcd" {
     provisioner "local-exec" {
         command = "/bin/bash scripts/bootstrapetcd.sh ${azurerm_public_ip.talos-public-ip[0].ip_address}"
       
     }
     provisioner "local-exec" {
-        command = "talosctl --talosconfig scripts/talosconfig kubeconfig ${var.configfolderpath}"
+        command = "/../../../../../intelops/capten/capten/terraform_modules/azure/talos/talosctl --talosconfig scripts/talosconfig kubeconfig ${var.configfolderpath} --nodes ${azurerm_public_ip.talos-public-ip[0].ip_address}"
+       # command = "talosctl --talosconfig scripts/talosconfig kubeconfig ${var.configfolderpath}"
       
     }
     provisioner "local-exec" {

@@ -40,16 +40,22 @@ then
 fi
 
 echo ${dnsname}
+TALOSCTL_BINARY="${PWD}/talosctl"
+
 echo ${4}
-../../../capten/talosctl gen config talosconfig-userdata https://${dnsname}:${4} --with-examples=false --with-docs=false --output-dir scripts/ --config-patch @scripts/patch.yaml --force
-../../../capten/talosctl validate --config scripts/controlplane.yaml --mode cloud
+
+
+${TALOSCTL_BINARY} gen config talosconfig-userdata https://${dnsname}:${4} --with-examples=false --with-docs=false --output-dir scripts/ --config-patch @scripts/patch.yaml --force
+${TALOSCTL_BINARY} validate --config scripts/controlplane.yaml --mode cloud
+# ../../../capten/talosctl gen config talosconfig-userdata https://${dnsname}:${4} --with-examples=false --with-docs=false --output-dir scripts/ --config-patch @scripts/patch.yaml --force
+#../../../capten/talosctl validate --config scripts/controlplane.yaml --mode cloud
 if [ $? -eq 1 ]
 then
     echo "scripts/controlplane.yaml is invalid"
     exit
 fi
-
-../../../capten/talosctl validate --config scripts/worker.yaml --mode cloud
+${TALOSCTL_BINARY} validate --config scripts/worker.yaml --mode cloud
+# ../../../capten/talosctl validate --config scripts/worker.yaml --mode cloud
 
 if [ $? -eq 1 ]
 then
