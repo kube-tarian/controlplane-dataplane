@@ -7,6 +7,7 @@ fi
 
 echo "node ip address is:"
 echo "$1"
+TALOSCTL_BINARY="${PWD}/talosctl"
 
 remoteip="$1"
 count=0
@@ -18,8 +19,8 @@ do
     if [ "$?" -eq 0 ]
     then
         echo "Talos API is up bootstrapping etcd"
-        ../../../capten/talosctl  --talosconfig scripts/talosconfig config endpoint "$remoteip"
-        ../../../capten/talosctl --talosconfig  scripts/talosconfig bootstrap --nodes "$remoteip"
+         ${TALOSCTL_BINARY}   --talosconfig scripts/talosconfig config endpoint "$remoteip"
+         ${TALOSCTL_BINARY}  --talosconfig  scripts/talosconfig bootstrap --nodes "$remoteip"
         break
     fi
     sleep 30
