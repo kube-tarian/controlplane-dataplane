@@ -340,7 +340,7 @@ resource "azurerm_lb_rule" "nats-4222" {
   frontend_port                  = 4222
   backend_port                   = var.nats-client-port
   frontend_ip_configuration_name = "natsfe"
-  backend_address_pool_ids = [ azurerm_lb_backend_address_pool.natsbe.id ]
+  backend_address_pool_ids = [ azurerm_lb_backend_address_pool.traefikbe.id ]
   
   probe_id = azurerm_lb_probe.nats-4222-health.id
 }
