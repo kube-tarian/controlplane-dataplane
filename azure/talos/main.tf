@@ -333,6 +333,18 @@ resource "azurerm_lb_rule" "traefik-80" {
   probe_id = azurerm_lb_probe.traefik-80-health.id
 }
 
+resource "azurerm_lb_rule" "nats-4222" {
+  loadbalancer_id                = azurerm_lb.natslb.id
+  name                           = "nats-4222"
+  protocol                       = "Tcp"
+  frontend_port                  = 4222
+  backend_port                   = var.nats-client-port
+  frontend_ip_configuration_name = "natsfe"
+  backend_address_pool_ids = [ azurerm_lb_backend_address_pool.natsbe.id ]
+  
+  probe_id = azurerm_lb_probe.nats-4222-health.id
+}
+
 resource "azurerm_network_interface" "nics" {
   count             = length(var.nics)
   name              = "nic-${count.index}"
