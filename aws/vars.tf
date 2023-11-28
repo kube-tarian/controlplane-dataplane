@@ -48,38 +48,3 @@ variable "workercount" {
     description = "talos worker node count"
 }
 
-variable "traefikhttpport" {
-    description = "NodePort value for Port 80"
-}
-
-variable "traefikhttpsport" {
-    description = "NodePort Value for port 443"
-}
-
-variable "nats-client-port" {
-    description = "NodePort Value for port 4222"
-}
-
-variable "talostg" {
-    description = "Name of the talosg target group"
-}
-
-variable "traefik_tg_80_name" {
-    description = "Name of the traefik 80 port target group"
-}
-
-variable "traefik_tg_443_name" {
-    description = "Name of the traefik 443 port target group"
-}
-
-variable "nats_tg_4222_name" {
-    description = "Name of the nats 4222 port target group"
-}
-
-variable "traefiklbname" {
-    description = "Name of the traefik lb"
-}
-
-variable "natslbname" {
-    description = "Name of the nats lb"
-}

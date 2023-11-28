@@ -1,11 +1,11 @@
 #!/bin/sh
 
-if [ $# -ne 3 ]
+if [ $# -ne 2 ]
 then
-    echo "Usage: $0 dnsname port talosctlpath"
+    echo "Usage: $0 dnsname port"
 fi
 
-while getopts ":h:p:t:" OPTION;
+while getopts "h:p" OPTION;
 do
     case "${OPTION}" in
     h) 
@@ -14,47 +14,27 @@ do
     p) 
        port="$OPTARG" 
        ;;
-    t) 
-       talosctlpath="$OPTARG" 
-       ;;
     esac
 done
-#if ! command -v talosctl &> /dev/null
-#then
-#    echo "Installing talos cli"
-#    curl -sL https://talos.dev/install | sh
-#else
-#    echo "talosctl is already installed skipping.."
-#fi
-
-if [ -f scripts/controlplane.yaml ]
+if ! command -v talosctl &> /dev/null
 then
-   rm -f scripts/controlplane.yaml
-fi
-
-if [ -f scripts/wokrer.yaml ]
-then
-   rm -f scripts/worker.yaml
-fi
-
-if [ -f scripts/talosconfig ]
-then
-   rm -f scripts/talosconfig
+    echo "Installing talos cli"
+    curl -sL https://talos.dev/install | sh
+else
+    echo "talosctl is already installed skipping.."
 fi
 
 echo ${dnsname}
-echo ${port}
-echo ${talosctlpath}
-
-${talosctlpath}/talosctl gen config talosconfig-userdata https://${dnsname}:${port} --with-examples=false --with-docs=false --output-dir scripts/ --config-patch @scripts/patch.yaml --force
-${talosctlpath}/talosctl validate --config scripts/controlplane.yaml --mode cloud
+echo ${4}
+talosctl gen config talosconfig-userdata https://${dnsname}:${4} --with-examples=false --with-docs=false --output-dir scripts/ --config-patch @scripts/patch.yaml --force
+talosctl validate --config scripts/controlplane.yaml --mode cloud
 if [ $? -eq 1 ]
 then
     echo "scripts/controlplane.yaml is invalid"
     exit
 fi
 
-${talosctlpath}/talosctl validate --config scripts/worker.yaml --mode cloud
+talosctl validate --config scripts/worker.yaml --mode cloud
 
 if [ $? -eq 1 ]
 then
