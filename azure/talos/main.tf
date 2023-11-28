@@ -297,6 +297,13 @@ resource "azurerm_lb_probe" "traefik-80-health" {
   protocol        = "Tcp"
 }
 
+resource "azurerm_lb_probe" "nats-4222-health" {
+  loadbalancer_id = azurerm_lb.natslb.id
+  name            = "nats-4222-health"
+  port            = 4222
+  protocol        = "Tcp"
+}
+
 resource "azurerm_lb_rule" "talos-6443" {
   loadbalancer_id                = azurerm_lb.taloslb.id
   name                           = "talos-6443"
