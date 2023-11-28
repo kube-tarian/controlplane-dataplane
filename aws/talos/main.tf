@@ -301,7 +301,7 @@ resource "aws_alb_listener" "traefik-listener-80" {
   
 }
 
-resource "aws_alb_listener" "nats-client-listener-4222" {
+resource "aws_alb_listener" "nats-listener-4222" {
     load_balancer_arn = aws_lb.nats.arn
     port = 4222
     protocol = "TCP"
