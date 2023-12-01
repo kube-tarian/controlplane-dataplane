@@ -215,6 +215,15 @@ resource "aws_lb_target_group" "traefik-tg-443" {
   
 }
 
+resource "aws_lb_target_group" "nats-tg-4222" {
+    name = var.nats_tg_4222_name
+    port = var.nats-client-port
+    protocol = "TCP"
+    target_type = "ip"
+    vpc_id = module.vpc.vpc_id
+  
+}
+
 resource "aws_lb_target_group_attachment" "registertarget" {
 
     count = var.mastercount
@@ -290,6 +299,17 @@ resource "aws_alb_listener" "traefik-listener-80" {
     default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.traefik-tg-80.arn
+  }
+  
+}
+
+resource "aws_alb_listener" "nats-client-listener-4222" {
+    load_balancer_arn = aws_lb.nats.arn
+    port = 4222
+    protocol = "TCP"
+    default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.nats-tg-4222.arn
   }
   
 }
