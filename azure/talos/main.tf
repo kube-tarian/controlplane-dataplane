@@ -189,7 +189,7 @@ resource "azurerm_network_security_rule" "nats" {
     name = "kube"
     network_security_group_name = azurerm_network_security_group.talossg.name
     priority = "1007"
-    source_port_range = "31675"
+    source_port_range = "*"
     destination_port_ranges = [ "${var.traefikhttpsport}" ]
     source_address_prefix  = "*"
     destination_address_prefix  = "*"
