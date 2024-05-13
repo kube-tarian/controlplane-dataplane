@@ -2,12 +2,12 @@ variable "region" {
   description = "Azure Region to deploy the resources"
 }
 
-variable "mastercount" {
+variable "staticmasternodecount" {
     description = "talos master node count"
     default = 3
 }
 
-variable "workercount" {
+variable "staticworkernodecount" {
     description = "talos worker node count"
     default = 3
 }
@@ -68,4 +68,37 @@ variable "talos_imagecont_name" {
 
 variable "talos_cluster_name" {
     description = "talosvnet name"
+}
+
+variable "wokerscalesetname" {
+    description = "talosworkerscaleset name"
+}
+
+variable "masterstaticname" {
+    description = "talos master static name"
+}
+
+variable "workerstaticname" {
+    description = "talos worker static name"
+}
+
+variable "masterscalesetname" {
+    description = "talos master scaleset name"
+}
+
+variable "subscription_id" {
+    description = "subscription id"
+}
+
+variable "tfstatergname" {
+    description = "resourcegroup where tfstate to be stored"  
+}
+
+variable "tfstatesaname" {
+    description = "storage account name of tfstate"
+  
+}
+
+variable "tfstatecontname" {
+    description = "tfstate storage account container name"
 }

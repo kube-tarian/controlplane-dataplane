@@ -125,68 +125,126 @@ data "local_file" "workerfile" {
   depends_on = [ null_resource.createtalosconfig ]
 }
 
-resource "aws_instance" talos_master_instance {
+resource "aws_placement_group" "talosplacemnentgroup" {
+  name     = "talosplacemnentgroup"
+  strategy = "cluster"
+}
 
-    count = var.mastercount
+resource "aws_launch_configuration" "talosmaster" {
+  name = "talos-master"
+  image_id = data.aws_ami.talos.id
+  instance_type = var.instance_type
+}
 
-    ami = data.aws_ami.talos.id
-    instance_type = var.instance_type
-    monitoring  = var.nodemonitoringenabled
-    vpc_security_group_ids = [ module.security_group.security_group_id ]
-    subnet_id              = "${element(module.vpc.private_subnets, 0)}"
+resource "aws_lb" "talosapi" {
+  name               = "talosapi"
+  internal           = false
+  load_balancer_type = "network"
+  subnets            = [for subnet in aws_subnet.public : subnet.id]
 
-    user_data = data.local_file.controllerfile.content
-    associate_public_ip_address = true
-
-    root_block_device {
-       volume_size = 200
-    }
-
-    depends_on = [ data.local_file.controllerfile ]
-
-    tags = {
-       Name = "talosmaster"
-    }
-
+  enable_deletion_protection = true
 
 }
-resource "aws_instance" talos_worker_instance {
+
+resource "aws_autoscaling_group" "talosmaster-static" {
+  name                      = "talosmaster-static"
+  max_size                  = 20
+  min_size                  = var.mastercount
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  desired_capacity          = 4
+  force_delete              = true
+  placement_group           = aws_placement_group.talosplacemnentgroup.id
+  launch_configuration      = aws_launch_configuration.talosmaster.name
+  load_balancers = aws_lb.talosapi.arn
+
+
+  timeouts {
+    delete = "15m"
+  }
+
+}
+
+resource "aws_autoscaling_group" "talosmaster-scalable" {
+  name                      = "talosmaster-scalable"
+  max_size                  = 20
+  min_size                  = var.mastercount
+  health_check_grace_period = 300
+  health_check_type         = "ELB"
+  desired_capacity          = 4
+  force_delete              = true
+  placement_group           = aws_placement_group.talosplacemnentgroup.id
+  launch_configuration      = aws_launch_configuration.talosmaster.name
+
+
+  timeouts {
+    delete = "15m"
+  }
+
+}
+
+# resource "aws_instance" talos_master_instance {
+
+#     count = var.mastercount
+
+#     ami = data.aws_ami.talos.id
+#     instance_type = var.instance_type
+#     monitoring  = var.nodemonitoringenabled
+#     vpc_security_group_ids = [ module.security_group.security_group_id ]
+#     subnet_id              = "${element(module.vpc.private_subnets, 0)}"
+
+#     user_data = data.local_file.controllerfile.content
+#     associate_public_ip_address = true
+
+#     root_block_device {
+#        volume_size = 200
+#     }
+
+#     depends_on = [ data.local_file.controllerfile ]
+
+#     tags = {
+#        Name = "talosmaster"
+#     }
+
+
+# }
+# resource "aws_instance" talos_worker_instance {
     
-    count = var.workercount
+#     count = var.workercount
 
-    ami = data.aws_ami.talos.id
-    instance_type = var.instance_type
-    monitoring  = var.nodemonitoringenabled
-    vpc_security_group_ids = [ module.security_group.security_group_id ]
-    subnet_id              = "${element(module.vpc.private_subnets, 0)}"
+#     ami = data.aws_ami.talos.id
+#     instance_type = var.instance_type
+#     monitoring  = var.nodemonitoringenabled
+#     vpc_security_group_ids = [ module.security_group.security_group_id ]
+#     subnet_id              = "${element(module.vpc.private_subnets, 0)}"
 
-    user_data = data.local_file.workerfile.content
-    associate_public_ip_address = true
+#     user_data = data.local_file.workerfile.content
+#     associate_public_ip_address = true
 
-    depends_on = [ data.local_file.workerfile ]
+#     depends_on = [ data.local_file.workerfile ]
 
-    root_block_device {
-       volume_size = 200
-    }
-    tags = {
-       Name = "talosworker"
-    }
+#     root_block_device {
+#        volume_size = 200
+#     }
+#     tags = {
+#        Name = "talosworker"
+#     }
 
 
-}
+# }
 
-resource "aws_ebs_volume" "ebs_volume" {
-  count             = "${var.workercount}"
-  availability_zone = "${element(aws_instance.talos_master_instance.*.availability_zone, count.index)}"
-  size              = "200"
-}
+# resource "aws_ebs_volume" "ebs_volume" {
+#   count             = "${var.workercount}"
+#   availability_zone = "${element(aws_instance.talos_master_instance.*.availability_zone, count.index)}"
+#   size              = "200"
+# }
 
-resource "aws_volume_attachment" "volume_attachement" {
-  count       = "${var.workercount}"
-  volume_id   = "${aws_ebs_volume.ebs_volume.*.id[count.index]}"
-  device_name = "/dev/sdd"
-  instance_id = "${element(aws_instance.talos_worker_instance.*.id, count.index)}"
-}
+# resource "aws_volume_attachment" "volume_attachement" {
+#   count       = "${var.workercount}"
+#   volume_id   = "${aws_ebs_volume.ebs_volume.*.id[count.index]}"
+#   device_name = "/dev/sdd"
+#   instance_id = "${element(aws_instance.talos_worker_instance.*.id, count.index)}"
+# }
 
 resource "aws_lb_target_group" "talos-tg" {
     name = var.talostg
@@ -197,14 +255,23 @@ resource "aws_lb_target_group" "talos-tg" {
   
 }
 
-resource "aws_lb_target_group" "traefik-tg-80" {
-    name = var.traefik_tg_80_name
-    port = var.traefikhttpport
+resource "aws_lb_target_group" "talos-api" {
+    name = "talosapi"
+    port = 500000
     protocol = "TCP"
     target_type = "ip"
     vpc_id = module.vpc.vpc_id
   
 }
+
+# resource "aws_lb_target_group" "traefik-tg-80" {
+#     name = var.traefik_tg_80_name
+#     port = var.traefikhttpport
+#     protocol = "TCP"
+#     target_type = "ip"
+#     vpc_id = module.vpc.vpc_id
+  
+# }
 
 resource "aws_lb_target_group" "traefik-tg-443" {
     name = var.traefik_tg_443_name
@@ -234,14 +301,22 @@ resource "aws_lb_target_group_attachment" "registertarget" {
 
 }
 
-resource "aws_lb_target_group_attachment" "registertarget-traefik-80" {
+resource "aws_lb_target_group_attachment" "talosapi" {
 
-    count = var.workercount
-    target_group_arn = aws_lb_target_group.traefik-tg-80.arn
-    target_id = "${element(split(",", join(",", aws_instance.talos_worker_instance.*.private_ip)), count.index)}" 
-    depends_on = [ aws_instance.talos_worker_instance ]  
+    count = var.mastercount
+    target_group_arn = aws_lb_target_group.talos-tg.arn
+    target_id = "${element(split(",", join(",", aws_instance.talos_master_instance.*.private_ip)), count.index)}" 
+    depends_on = [ aws_instance.talos_master_instance ]  
 
 }
+# resource "aws_lb_target_group_attachment" "registertarget-traefik-80" {
+
+#     count = var.workercount
+#     target_group_arn = aws_lb_target_group.traefik-tg-80.arn
+#     target_id = "${element(split(",", join(",", aws_instance.talos_worker_instance.*.private_ip)), count.index)}" 
+#     depends_on = [ aws_instance.talos_worker_instance ]  
+
+# }
 
 resource "aws_lb_target_group_attachment" "registertarget-traefik-443" {
 
@@ -301,7 +376,7 @@ resource "aws_alb_listener" "traefik-listener-443" {
   }
   
 }
-
+ 
 resource "aws_alb_listener" "nats-listener-4222" {
     load_balancer_arn = aws_lb.traefik.arn
     port = 4222
@@ -313,16 +388,6 @@ resource "aws_alb_listener" "nats-listener-4222" {
   
 }
 
-resource "aws_alb_listener" "traefik-listener-80" {
-    load_balancer_arn = aws_lb.traefik.arn
-    port = 80
-    protocol = "TCP"
-    default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.traefik-tg-80.arn
-  }
-  
-}
 
 resource "null_resource" "bootstrap_etcd" {
     provisioner "local-exec" {
